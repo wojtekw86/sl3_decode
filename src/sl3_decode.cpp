@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <openssl/sha.h>
-#include <ctime>
+#include <time.h>
 
 unsigned char _master[11];
 unsigned char _random[4];
@@ -24,8 +24,10 @@ unsigned char temp[SHA_DIGEST_LENGTH];
 char buf[SHA_DIGEST_LENGTH*2];
 char buf2[48];
 
-clock_t start_time;
-clock_t part_start_time;
+time_t start_time;
+time_t end_time;
+//time_t part_start_time;
+//time_t part_end_time;
 
 void bf(int);
 
@@ -46,8 +48,10 @@ int main(int argn, char *argv[]) {
 	memcpy(code+11, (const void*)_random, 4);
 	memcpy(code+11+4+1, (const void*)imei, 7);
 
-	start_time = clock();
-	part_start_time = clock();
+	time(&start_time);
+	time(&end_time);
+	//time(&part_start_time);
+	//time(&part_end_time);
 	bf(0);
 
 	return 0;
@@ -66,9 +70,9 @@ void bf(int digit) {
 				perm_count = 0;
 				perm_count_1000000++;
 				if(perm_count_1000000 % 10 == 0) {
-					unsigned long time_ms = (clock()-part_start_time)*1000/CLOCKS_PER_SEC;
-					unsigned long long elapsed_s = ((clock()-start_time)/CLOCKS_PER_SEC);
-					unsigned long long time_secs = ((time_ms*(1000000000000000-(perm_count_1000000*1000000))/1000000)/1000);
+					time(&end_time);
+					unsigned long long elapsed_s = difftime(end_time, start_time);
+					unsigned long long time_secs = elapsed_s * ((1000000000 / (perm_count_1000000))-1);
 					unsigned long long time_mins = time_secs / 60;
 					time_secs = time_secs % 60;
 					unsigned long long time_hours = time_mins / 60;
@@ -76,9 +80,9 @@ void bf(int digit) {
 					unsigned long long time_days = time_hours / 24;
 					time_hours = time_hours % 24;
 
-					printf("DONE: %luM [ %lf%% ] time:%lums elapsed:%llus est:%llud %lluh %llum %llus\n", perm_count_1000000, (double)(perm_count_1000000 / 10000000.0), time_ms, elapsed_s, time_days, time_hours, time_mins, time_secs);
+					printf("DONE: %luM [ %lf%% ] elapsed:%llus est:%llud %lluh %llum %llus\n", perm_count_1000000, (double)(perm_count_1000000 / 10000000.0), elapsed_s, time_days, time_hours, time_mins, time_secs);
 				}
-				part_start_time = clock();
+				//part_start_time = clock();
 			}
 
 			if(memcmp((const void*)temp, (const void*)SHA1_CODE, SHA_DIGEST_LENGTH) == 0){
